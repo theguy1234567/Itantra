@@ -1,1 +1,2 @@
 app/src/main/assets/onnx/vakyansh_hindi.onnx.data filter=lfs diff=lfs merge=lfs -text
+iTantra-POC.apk filter=lfs diff=lfs merge=lfs -text
