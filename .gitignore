@@ -1,0 +1,18 @@
+
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Android Studio
+.idea/
+*.iml
+
+# Local logs
+*.log
+crash.txt
+temp_crash.log
+
+# Large/generated model artifacts not committed to Git
+app/src/main/assets/indicconformer-hi/
+app/src/main/assets/whisper-tiny-multi/
