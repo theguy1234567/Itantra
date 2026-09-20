@@ -5,6 +5,13 @@ import android.content.pm.PackageManager
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -45,9 +52,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
@@ -199,7 +208,7 @@ fun CommunicationScreen(viewModel: CommunicationViewModel) {
                 }
             }
 
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
@@ -207,77 +216,159 @@ fun CommunicationScreen(viewModel: CommunicationViewModel) {
                         shape = RoundedCornerShape(28.dp)
                     )
                     .padding(horizontal = 12.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedTextField(
-                    value = inputText,
-                    onValueChange = { viewModel.updateInputText(it) },
-                    placeholder = { Text("Ask me anything...") },
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { contentDescription = "Message input" },
-                    singleLine = true,
-                    enabled = isConnected,
-                    shape = RoundedCornerShape(20.dp)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .background(
-                            color = if (isRecording) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                            shape = CircleShape
-                        )
-                        .semantics { contentDescription = "Voice input" }
-                        .pointerInput(Unit) {
-                            awaitEachGesture {
-                                awaitFirstDown(requireUnconsumed = false)
-
-                                Log.d("ITANTRA_UI", "POINTER_DOWN")
-                                viewModel.startRecording()
-
-                                try {
-                                    waitForUpOrCancellation()
-                                } finally {
-                                    Log.d("ITANTRA_UI", "RELEASE")
-                                    viewModel.stopRecordingAndTranscribe()
-                                }
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Mic,
-                        contentDescription = null,
-                        tint = if (isRecording) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                if (isRecording || isProcessing) {
+                    TranscriptionIndicator(isProcessing = isProcessing)
                 }
 
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .background(
-                            color = if (inputText.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                            shape = CircleShape
-                        )
-                        .semantics { contentDescription = "Send message" },
-                    contentAlignment = Alignment.Center
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    IconButton(
-                        onClick = { viewModel.sendMessage() },
-                        enabled = isConnected && inputText.isNotBlank(),
-                        modifier = Modifier.fillMaxSize()
+                    OutlinedTextField(
+                        value = inputText,
+                        onValueChange = { viewModel.updateInputText(it) },
+                        placeholder = { Text("Ask me anything...") },
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { contentDescription = "Message input" },
+                        singleLine = true,
+                        enabled = isConnected,
+                        shape = RoundedCornerShape(20.dp)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(
+                                color = if (isRecording) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                shape = CircleShape
+                            )
+                            .semantics { contentDescription = "Voice input" }
+                            .pointerInput(Unit) {
+                                awaitEachGesture {
+                                    awaitFirstDown(requireUnconsumed = false)
+
+                                    Log.d("ITANTRA_UI", "POINTER_DOWN")
+                                    viewModel.startRecording()
+
+                                    try {
+                                        waitForUpOrCancellation()
+                                    } finally {
+                                        Log.d("ITANTRA_UI", "RELEASE")
+                                        viewModel.stopRecordingAndTranscribe()
+                                    }
+                                }
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Send,
+                            imageVector = Icons.Filled.Mic,
                             contentDescription = null,
-                            tint = if (inputText.isNotBlank()) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (isRecording) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(
+                                color = if (inputText.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                shape = CircleShape
+                            )
+                            .semantics { contentDescription = "Send message" },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(
+                            onClick = { viewModel.sendMessage() },
+                            enabled = isConnected && inputText.isNotBlank(),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Send,
+                                contentDescription = null,
+                                tint = if (inputText.isNotBlank()) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TranscriptionIndicator(isProcessing: Boolean) {
+    val infiniteTransition = rememberInfiniteTransition(label = "transcription-wave")
+    val pulse by infiniteTransition.animateFloat(
+        initialValue = 0.7f,
+        targetValue = 1.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 700, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "transcription-pulse"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(14.dp)
+            )
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(18.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = CircleShape
+                )
+                .scale(pulse),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(modifier = Modifier.size(12.dp)) {
+                val bars = listOf(0.2f, 0.45f, 0.7f, 0.9f, 0.6f)
+                val width = size.width / (bars.size * 2f)
+                val heightScale = 0.45f + (pulse - 0.7f) * 0.7f
+                bars.forEachIndexed { index, normalized ->
+                    val x = index * (width * 2f) + width * 0.5f
+                    val barHeight = (size.height * normalized * heightScale)
+                    drawPath(
+                        path = Path().apply {
+                            moveTo(x, size.height)
+                            lineTo(x, size.height - barHeight)
+                            lineTo(x + width, size.height - barHeight)
+                            lineTo(x + width, size.height)
+                            close()
+                        },
+                        color = Color.White,
+                        style = Stroke(width = 1f)
+                    )
+                }
+            }
+        }
+
+        Text(
+            text = "Transcribing...",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Text(
+            text = "Release to send",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
