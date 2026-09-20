@@ -74,6 +74,9 @@ dependencies {
     // WebSocket
     implementation("org.java-websocket:Java-WebSocket:1.5.6")
 
+    // ONNX Runtime for the restored Vakyansh ONNX implementation
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.19.0")
+
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

@@ -1,6 +1,8 @@
 package com.itantara.app.presentation.navigation
 
+import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -14,14 +16,25 @@ import com.itantara.app.presentation.setup.SetupScreen
 
 @Composable
 fun NavGraph(navController: NavHostController = rememberNavController()) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("itantra_ui_prefs", Context.MODE_PRIVATE)
+    val startDestination = if (prefs.getBoolean("show_onboarding", true)) {
+        Screen.Setup.route
+    } else {
+        Screen.Connection.route
+    }
+
     NavHost(
         navController = navController,
-        startDestination = Screen.Setup.route
+        startDestination = startDestination
     ) {
         composable(Screen.Setup.route) {
             SetupScreen(
                 onNavigateToConnection = {
-                    navController.navigate(Screen.Connection.route)
+                    prefs.edit().putBoolean("show_onboarding", false).apply()
+                    navController.navigate(Screen.Connection.route) {
+                        popUpTo(Screen.Setup.route) { inclusive = true }
+                    }
                 }
             )
         }
