@@ -24,7 +24,7 @@ The same APK runs on two Android phones.
 6. The receiving phone parses the message and displays it.
 7. Direct text messaging is also supported.
 
-> **Current scope:** the APK proves local Hindi STT and local text transport. Multilingual STT, offline translation and offline TTS are future extensions.
+> **Current scope:** the APK proves local Hindi STT and local text transport. Multilingual STT, offline translation, offline TTS, VAD and constrained-radio transport are future extensions.
 
 ## ✅ Current POC Capabilities
 
@@ -48,7 +48,11 @@ The same APK runs on two Android phones.
 | Offline neural TTS | 🔄 Future |
 | Multilingual offline STT | 🔄 Future |
 | Offline translation | 🔄 Future |
+| VAD | 🔄 Future |
+| Payload compression | 🔄 Future |
 | Low-bandwidth radio transport | 🔄 Future |
+| Mesh networking | 🔄 Future |
+| Emergency messaging | 🔄 Future |
 
 ---
 
@@ -369,11 +373,7 @@ com.itantara.app
 
 ## **[Download iTantra POC APK](https://github.com/theguy1234567/Itantra/blob/main/iTantra-POC.apk)**
 
-The APK is included directly in this repository as:
-
-```text
-iTantra-POC.apk
-```
+The APK is included directly in this repository as `iTantra-POC.apk`.
 
 ---
 
@@ -408,7 +408,6 @@ Measure and optimise model size, RAM, CPU, inference latency, battery consumptio
 
 ### 10. Full iTantra Transceiver
 Combine:
-
 ```text
 Offline STT
 + Offline Translation
@@ -417,7 +416,6 @@ Offline STT
 + Offline TTS
 + Emergency Messaging
 ```
-
 into the complete multilingual neural transceiver envisioned by the project.
 
 ---
@@ -428,9 +426,14 @@ into the complete multilingual neural transceiver envisioned by the project.
 |---|:---:|:---:|
 | Android app | ✅ | ✅ |
 | Push-to-talk | ✅ | ✅ |
-| Local STT | ✅ Hindi | ✅ Multilingual |
-| Text-only local communication | ✅ | ✅ |
-| WebSocket transport | ✅ | Development transport |
+| **Offline local STT** | ✅ **Hindi / Vakyansh ONNX** | ✅ Multilingual |
+| **16 kHz PCM audio capture** | ✅ | ✅ |
+| **On-device ONNX inference** | ✅ | ✅ |
+| **Local WebSocket server/client** | ✅ | Development transport |
+| **Text-only communication** | ✅ | ✅ |
+| **Host / Join two-phone flow** | ✅ | ✅ |
+| **Local IP discovery** | ✅ | ✅ |
+| **Conversation UI / message history** | ✅ | ✅ |
 | Offline translation | — | ✅ |
 | Offline TTS | — | ✅ |
 | VAD | — | ✅ |
@@ -438,7 +441,7 @@ into the complete multilingual neural transceiver envisioned by the project.
 | Low-bandwidth radio | — | ✅ |
 | Mesh networking | — | ✅ |
 | Emergency messaging | — | ✅ |
-| Fully Internet-independent pipeline | Partial | ✅ |
+| **Fully Internet-independent STT + text transport** | ✅ | ✅ Full pipeline |
 
 ---
 
